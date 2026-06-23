@@ -1,6 +1,6 @@
 {
-  "name": "Commission Tracker",
-  "short_name": "Commissions",
+  "name": "MyCommissions",
+  "short_name": "MyCommissions",
   "description": "Lacak progres komisi kamu",
   "start_url": "/my-commissions/",
   "display": "standalone",
