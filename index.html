@@ -463,6 +463,7 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
     <div class="detail-actions">
       <button class="btn-save" style="margin-top:0;flex:1" id="d-save-btn" onclick="saveDetail()">Simpan perubahan</button>
       <button class="btn-outline" id="d-toggle-done" onclick="toggleDetailDone()"></button>
+      <button class="btn-outline" onclick="copyCommissionLink()" title="Copy link komisi ini" style="padding:9px 12px">🔗</button>
       <button class="btn-danger" onclick="deleteFromDetail()">Hapus</button>
     </div>
   </div>
@@ -514,6 +515,7 @@ function startSync() {
     commissions = snap.docs.map(d => d.data()).sort((a,b) => b.id - a.id);
     renderView();
     updateBanner();
+    checkDeepLink();
   });
 }
 
@@ -1057,7 +1059,27 @@ async function deleteComment(idx) {
 function commentKeydown(e) { if (e.key==='Enter' && (e.ctrlKey||e.metaKey)) { e.preventDefault(); sendComment(); } }
 function autoResizeTextarea(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
 
-// ─── LIGHTBOX ────────────────────────────────────────────────────────────────
+function copyCommissionLink() {
+  const url = `${location.origin}${location.pathname}#${detailId}`;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.detail-actions .btn-outline[title]');
+    const orig = btn.textContent;
+    btn.textContent = '✅';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// ─── DEEP LINK via URL hash ───────────────────────────────────────────────────
+function checkDeepLink() {
+  const hash = location.hash.replace('#','');
+  if (!hash) return;
+  const id = parseInt(hash);
+  if (!id) return;
+  const c = commissions.find(x => x.id === id);
+  if (c) openDetail(id);
+}
+
+
 function openLightbox(src) {
   lbSrc = src;
   window.lbSrc = src;
@@ -1101,7 +1123,8 @@ Object.assign(window, {
   addImgsToDetail, removeImg,
   renderMentionBar, insertMention,
   sendComment, deleteComment, commentKeydown, autoResizeTextarea,
-  openLightbox, closeLightbox, dlImg
+  openLightbox, closeLightbox, dlImg,
+  copyCommissionLink
 });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
