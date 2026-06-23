@@ -1064,7 +1064,20 @@ function openLightbox(src) {
   document.getElementById('lightbox').classList.add('open');
 }
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
-function dlImg(src, name) { const a=document.createElement('a'); a.href=src; a.download=name||'gambar.jpg'; a.click(); }
+async function dlImg(src, name) {
+  try {
+    const res = await fetch(src);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name || 'gambar.jpg';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(e) {
+    // Fallback: buka di tab baru
+    window.open(src, '_blank');
+  }
+}
 
 // ─── EVENTS ──────────────────────────────────────────────────────────────────
 document.getElementById('add-modal').addEventListener('click', function(e){ if(e.target===this) closeAddModal(); });
