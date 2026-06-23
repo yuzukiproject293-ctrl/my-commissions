@@ -199,6 +199,11 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
 .mention-chip img{width:20px;height:20px;border-radius:4px;object-fit:cover;flex-shrink:0}
 .mention-chip span{font-size:12px;color:var(--accent);font-weight:500}
 
+/* ── TOAST NOTIFICATION ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-icon{font-size:16px}
+
 /* ── FILE ATTACHMENTS ── */
 .files-section{padding:0 24px 16px}
 .file-upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-bottom:14px;position:relative}
@@ -589,6 +594,12 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
     <button class="lb-btn" onclick="dlImg(document.getElementById('lb-img').src,'gambar.jpg')">⬇ Download</button>
     <button class="lb-btn" onclick="closeLightbox()">Tutup</button>
   </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">⏳</span>
+  <span id="toast-msg">Upload sedang berjalan, harap tunggu...</span>
 </div>
 
 <script type="module">
@@ -1391,6 +1402,13 @@ async function addFilesToDetail(input) {
   progressWrap.style.display = 'block';
   progressBar.style.width = '0%';
 
+  // Blokir tombol close & actions saat upload
+  const closeBtn = document.querySelector('#detail-modal .modal-close');
+  const actionBtns = document.querySelectorAll('#detail-modal .detail-actions button');
+  isFileUploading = true;
+  if (closeBtn) { closeBtn.style.opacity = '0.3'; closeBtn.title = 'Upload sedang berjalan...'; }
+  actionBtns.forEach(b => { b.disabled = true; b.style.opacity = '0.4'; });
+
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const placeholder = document.createElement('div');
@@ -1423,11 +1441,18 @@ async function addFilesToDetail(input) {
     }
   }
 
+  // Buka kembali tombol close & actions
+  isFileUploading = false;
+  if (closeBtn) { closeBtn.style.opacity = ''; closeBtn.title = ''; }
+  actionBtns.forEach(b => { b.disabled = false; b.style.opacity = ''; });
+  showToast('✅ Upload selesai!', '✅', 2000);
+
   progressWrap.style.display = 'none';
   progressBar.style.width = '0%';
   await save(c);
   renderFileList(c);
   updateDetailTabCounts(c);
+
 }
 
 function removeFile(idx) {
@@ -1436,6 +1461,22 @@ function removeFile(idx) {
   if (!confirm('Hapus file "' + c.files[idx].name + '"?')) return;
   c.files.splice(idx, 1);
   save(c); renderFileList(c); updateDetailTabCounts(c);
+}
+
+let isFileUploading = false;
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, icon='⏳', duration=3000) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent  = msg;
+  document.getElementById('toast-icon').textContent = icon;
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  if (duration > 0) toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+}
+function hideToast() {
+  document.getElementById('toast').classList.remove('show');
 }
 
 async function saveDetail() {
@@ -1461,7 +1502,14 @@ async function deleteFromDetail() {
   closeDetail();
 }
 
-function closeDetail() { document.getElementById('detail-modal').classList.remove('open'); detailId = null; }
+function closeDetail() {
+  if (isFileUploading) {
+    showToast('⏳ Upload sedang berjalan, harap tunggu sebentar...', '⏳', 2500);
+    return;
+  }
+  document.getElementById('detail-modal').classList.remove('open');
+  detailId = null;
+}
 
 // ─── COMMENTS ────────────────────────────────────────────────────────────────
 function renderMentionBar(c) {
@@ -1631,7 +1679,8 @@ Object.assign(window, {
   copyCommissionLink, copyLink,
   openStageManager, closeStageManager, saveStageManager, addNewStage, removeDraftStage, draftChange,
   dragStart, dragOver, dragDrop, dragEnd,
-  onSearch, clearSearch
+  onSearch, clearSearch,
+  showToast, hideToast
 });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
