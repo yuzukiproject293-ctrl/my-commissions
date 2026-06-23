@@ -199,6 +199,28 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
 .mention-chip img{width:20px;height:20px;border-radius:4px;object-fit:cover;flex-shrink:0}
 .mention-chip span{font-size:12px;color:var(--accent);font-weight:500}
 
+/* ── FILE ATTACHMENTS ── */
+.files-section{padding:0 24px 16px}
+.file-upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-bottom:14px;position:relative}
+.file-upload-zone:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--text2)}
+.file-list{display:flex;flex-direction:column;gap:8px}
+.file-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 12px;transition:border-color .15s}
+.file-item:hover{border-color:var(--border2)}
+.file-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center}
+.file-info{flex:1;min-width:0}
+.file-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.file-actions{display:flex;gap:6px;flex-shrink:0}
+.file-btn{width:30px;height:30px;border-radius:8px;border:0.5px solid var(--border2);background:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.file-btn:hover{background:var(--surface);color:var(--text)}
+.file-btn.danger:hover{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.file-uploading-item{display:flex;align-items:center;gap:10px;background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.file-progress-wrap{flex:1}
+.file-progress-name{font-size:12px;color:var(--text2);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-progress-bar-wrap{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.file-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .2s ease;width:0%}
+.no-files{text-align:center;padding:20px;color:var(--text3);font-size:13px}
+
 /* ── SEARCH BAR ── */
 .search-wrap{position:relative;margin-bottom:16px}
 .search-input{width:100%;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:14px;padding:10px 14px 10px 38px;outline:none;transition:border-color .15s;font-family:inherit}
@@ -458,7 +480,8 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
 
     <div class="detail-tabs">
       <button class="detail-tab active" onclick="switchDetailTab('imgs',this)" id="tab-imgs">Gambar <span class="detail-tab-badge" id="tab-imgs-count">0</span></button>
-      <button class="detail-tab" onclick="switchDetailTab('edit',this)" id="tab-edit">Edit detail</button>
+      <button class="detail-tab" onclick="switchDetailTab('files',this)" id="tab-files">File <span class="detail-tab-badge" id="tab-files-count">0</span></button>
+      <button class="detail-tab" onclick="switchDetailTab('edit',this)" id="tab-edit">Edit</button>
       <button class="detail-tab" onclick="switchDetailTab('comments',this)" id="tab-comments">Komentar <span class="detail-tab-badge" id="tab-comments-count">0</span></button>
     </div>
 
@@ -467,6 +490,20 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
       <div class="detail-imgs">
         <div class="img-gallery" id="d-gallery"></div>
         <input type="file" id="d-img-input" accept="image/*,.psd,.tiff,.tif" style="display:none" multiple onchange="addImgsToDetail(this)">
+      </div>
+    </div>
+
+    <!-- Tab: File -->
+    <div id="dtab-files" style="display:none">
+      <div class="files-section">
+        <div class="file-upload-zone" onclick="document.getElementById('d-file-input').click()">
+          <div style="font-size:24px">📦</div>
+          <div>Klik untuk upload file</div>
+          <div style="font-size:11px;color:var(--text3)">ZIP, RAR, PSD, AI, PDF, dan format lainnya</div>
+          <div class="upload-progress" id="file-upload-progress" style="display:none"><div class="upload-progress-bar" id="file-progress-bar"></div></div>
+        </div>
+        <input type="file" id="d-file-input" style="display:none" multiple onchange="addFilesToDetail(this)">
+        <div class="file-list" id="d-file-list"></div>
       </div>
     </div>
 
@@ -954,6 +991,7 @@ function cardHTML(c, q) {
       <span class="badge badge-${stage}">${stageEmoji(stage)} ${stageLabel(stage)}</span>
       ${cloudIcon}
       ${imgs.length > 1 ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">📷 ${imgs.length}</span>` : ''}
+      ${(c.files||[]).length > 0 ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">📎 ${c.files.length}</span>` : ''}
       ${commentCount > 0 ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">💬 ${commentCount}</span>` : ''}
       ${c.note ? `<div class="card-note">${noteHtml}</div>` : ''}
     </div>
@@ -1158,7 +1196,7 @@ async function saveCommission() {
 // ─── DETAIL ──────────────────────────────────────────────────────────────────
 function switchDetailTab(tab, btn) {
   activeDetailTab = tab;
-  ['imgs','edit','comments'].forEach(t => { document.getElementById('dtab-'+t).style.display = t===tab ? 'block' : 'none'; });
+  ['imgs','files','edit','comments'].forEach(t => { document.getElementById('dtab-'+t).style.display = t===tab ? 'block' : 'none'; });
   document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('d-save-btn').style.display = tab==='edit' ? 'block' : 'none';
@@ -1184,6 +1222,7 @@ function openDetail(id) {
   buildStageButtons('d-stages-row', c.done ? null : c.stage);
 
   renderDetailGallery(c);
+  renderFileList(c);
   renderComments(c);
   updateDetailTabCounts(c);
 
@@ -1198,6 +1237,7 @@ function openDetail(id) {
 
 function updateDetailTabCounts(c) {
   document.getElementById('tab-imgs-count').textContent     = (c.imgs||[]).length;
+  document.getElementById('tab-files-count').textContent    = (c.files||[]).length;
   document.getElementById('tab-comments-count').textContent = (c.comments||[]).length;
 }
 
@@ -1259,6 +1299,113 @@ function removeImg(idx) {
   c.imgs.splice(idx, 1);
   c.img = c.imgs[0] || null;
   save(c); renderDetailGallery(c); updateDetailTabCounts(c); renderView();
+}
+
+// ─── FILE ATTACHMENTS ────────────────────────────────────────────────────────
+function getFileIcon(name) {
+  const ext = (name||'').split('.').pop().toLowerCase();
+  const map = {
+    zip:'🗜️', rar:'🗜️', '7z':'🗜️', gz:'🗜️',
+    pdf:'📄', doc:'📝', docx:'📝', txt:'📝',
+    psd:'🎨', ai:'🎨', xd:'🎨', fig:'🎨', sketch:'🎨',
+    mp4:'🎬', mov:'🎬', avi:'🎬',
+    mp3:'🎵', wav:'🎵',
+    xlsx:'📊', csv:'📊',
+  };
+  return map[ext] || '📎';
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function renderFileList(c) {
+  const files = c.files || [];
+  const el = document.getElementById('d-file-list');
+  if (!el) return;
+  if (!files.length) {
+    el.innerHTML = '<div class="no-files">📭 Belum ada file terlampir.<br>Upload ZIP, PSD, PDF, dan lainnya di sini.</div>';
+    return;
+  }
+  el.innerHTML = files.map((f, i) => `
+    <div class="file-item">
+      <div class="file-icon">${getFileIcon(f.name)}</div>
+      <div class="file-info">
+        <div class="file-name" title="${esc(f.name)}">${esc(f.name)}</div>
+        <div class="file-meta">${f.size ? formatBytes(f.size) : ''} ${f.size && f.uploaded ? '·' : ''} ${f.uploaded ? f.uploaded : ''}</div>
+      </div>
+      <div class="file-actions">
+        <button class="file-btn" title="Download / Buka" onclick="window.open('${f.url}','_blank')">⬇</button>
+        <button class="file-btn danger" title="Hapus file" onclick="removeFile(${i})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+async function addFilesToDetail(input) {
+  if (!input.files.length) return;
+  const c = commissions.find(x => x.id===detailId);
+  if (!c) return;
+  if (!c.files) c.files = [];
+  if (!isCloudinaryReady()) {
+    alert('⚙️ Cloudinary belum disetup!\n\nUntuk upload file besar (ZIP, PSD, dll) kamu perlu mengatur Cloudinary dulu di ⚙️ Pengaturan.');
+    input.value = '';
+    return;
+  }
+
+  const files = Array.from(input.files);
+  input.value = '';
+  const progressWrap = document.getElementById('file-upload-progress');
+  const progressBar  = document.getElementById('file-progress-bar');
+  progressWrap.style.display = 'block';
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    // Add uploading placeholder
+    const placeholder = document.createElement('div');
+    placeholder.className = 'file-uploading-item';
+    placeholder.innerHTML = `
+      <div class="file-icon">${getFileIcon(file.name)}</div>
+      <div class="file-progress-wrap">
+        <div class="file-progress-name">${esc(file.name)}</div>
+        <div class="file-progress-bar-wrap"><div class="file-progress-bar" id="fp-${i}"></div></div>
+      </div>`;
+    document.getElementById('d-file-list').prepend(placeholder);
+
+    try {
+      const result = await uploadToCloudinary(file, pct => {
+        const bar = document.getElementById('fp-'+i);
+        if (bar) bar.style.width = pct + '%';
+        progressBar.style.width = pct + '%';
+      });
+      c.files.push({
+        name: file.name,
+        url: result.url,
+        size: file.size,
+        uploaded: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})
+      });
+    } catch(e) {
+      alert('Upload gagal: ' + e.message);
+    } finally {
+      placeholder.remove();
+    }
+  }
+
+  progressWrap.style.display = 'none';
+  progressBar.style.width = '0%';
+  await save(c);
+  renderFileList(c);
+  updateDetailTabCounts(c);
+}
+
+function removeFile(idx) {
+  const c = commissions.find(x => x.id===detailId);
+  if (!c || !c.files) return;
+  if (!confirm('Hapus file "' + c.files[idx].name + '"?')) return;
+  c.files.splice(idx, 1);
+  save(c); renderFileList(c); updateDetailTabCounts(c);
 }
 
 async function saveDetail() {
@@ -1447,6 +1594,7 @@ Object.assign(window, {
   switchDetailTab, openSettings, closeSettings, saveSettings,
   setView, setFilter, pickStage,
   addImgsToDetail, removeImg,
+  addFilesToDetail, removeFile,
   renderMentionBar, insertMention,
   sendComment, deleteComment, commentKeydown, autoResizeTextarea,
   openLightbox, closeLightbox, dlImg,
