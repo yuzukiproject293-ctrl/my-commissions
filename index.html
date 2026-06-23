@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commission Tracker</title>
+<meta name="description" content="Lacak progres komisi kamu">
+<meta name="theme-color" content="#9f8cf6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Commissions">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#0f0f12;--surface:#18181c;--surface2:#222228;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#f0eef8;--text2:#9896a8;--text3:#5e5c6e;--accent:#9f8cf6;--accent-dim:rgba(159,140,246,0.15);--sketsa:#60a5fa;--sketsa-bg:rgba(96,165,250,0.12);--base:#fb923c;--base-bg:rgba(251,146,60,0.12);--finishing:#34d399;--finishing-bg:rgba(52,211,153,0.12);--done:#a78bfa;--done-bg:rgba(167,139,250,0.12);--danger:#f87171;--danger-bg:rgba(248,113,113,0.12);--radius:10px;--radius-lg:14px;--radius-xl:20px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── SETUP BANNER ── */
+.setup-banner{background:linear-gradient(135deg,rgba(159,140,246,0.18),rgba(96,165,250,0.10));border-bottom:0.5px solid rgba(159,140,246,0.3);padding:14px 32px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.setup-banner.hidden{display:none}
+.setup-banner-icon{font-size:22px;flex-shrink:0}
+.setup-banner-text{flex:1;min-width:220px}
+.setup-banner-title{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:2px}
+.setup-banner-sub{font-size:12px;color:var(--text2)}
+.btn-setup{padding:8px 16px;background:var(--accent);border:none;border-radius:var(--radius);color:#fff;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.btn-setup:hover{opacity:.85}
+
+.header{padding:28px 32px 0;border-bottom:0.5px solid var(--border)}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.3px}
+.logo-sub{font-size:12px;color:var(--text2);margin-top:1px}
+.header-right{display:flex;gap:8px;align-items:center}
+.btn-add{display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s,transform .1s}
+.btn-add:hover{opacity:.88}
+.btn-add:active{transform:scale(.97)}
+.btn-settings{width:36px;height:36px;border-radius:var(--radius);border:0.5px solid var(--border2);background:none;color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-settings:hover{background:var(--surface2);color:var(--text)}
+.stats{display:flex;gap:24px}
+.stat-item{padding:0 0 16px;border-bottom:2px solid transparent;cursor:pointer;transition:border-color .15s}
+.stat-item.active{border-color:var(--accent)}
+.stat-num{font-size:22px;font-weight:600;color:var(--text);line-height:1}
+.stat-label{font-size:12px;color:var(--text2);margin-top:3px}
+.main{padding:28px 32px}
+.filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;border:0.5px solid var(--border2);background:none;color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s}
+.filter-btn:hover{background:var(--surface2);color:var(--text)}
+.filter-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .15s,transform .15s;cursor:pointer}
+.card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.card-thumb{width:100%;height:140px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card-thumb img{width:100%;height:100%;object-fit:cover}
+.card-thumb .no-img{font-size:32px;opacity:.25}
+.card-stage-bar{height:3px;background:var(--border)}
+.fill{height:100%;transition:width .4s ease}
+.fill-sketsa{background:var(--sketsa);width:33%}
+.fill-base{background:var(--base);width:66%}
+.fill-finishing{background:var(--finishing);width:100%}
+.fill-done{background:var(--done);width:100%}
+.card-body{padding:12px 14px}
+.card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-client{font-size:12px;color:var(--text2);margin-bottom:10px}
+.card-note{font-size:11px;color:var(--text3);margin-top:6px;margin-bottom:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-sketsa{background:var(--sketsa-bg);color:var(--sketsa)}
+.badge-base{background:var(--base-bg);color:var(--base)}
+.badge-finishing{background:var(--finishing-bg);color:var(--finishing)}
+.badge-done{background:var(--done-bg);color:var(--done)}
+.card-footer{padding:8px 14px 12px;display:flex;gap:6px;align-items:center;border-top:0.5px solid var(--border);margin-top:8px}
+.card-date{font-size:11px;color:var(--text3);flex:1}
+.btn-icon{width:30px;height:30px;border-radius:8px;border:0.5px solid var(--border2);background:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.btn-icon:hover{background:var(--surface2);color:var(--text)}
+.btn-icon.danger:hover{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:13px}
+.section-label{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:0.5px solid var(--border)}
+
+/* ── MODALS ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--radius-xl);width:100%;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--surface2);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;color:var(--text2);margin-bottom:6px;display:block}
+.form-label span{font-size:11px;color:var(--text3);font-weight:400;margin-left:4px}
+.form-input{width:100%;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:14px;padding:10px 14px;outline:none;transition:border-color .15s;font-family:inherit}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
+
+/* Upload zone */
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:all .15s;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--text2)}
+.upload-zone.has-img{border-style:solid;border-color:var(--accent)}
+.upload-zone.uploading{pointer-events:none;opacity:.7}
+.upload-zone img{max-height:110px;border-radius:8px}
+.upload-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--border);border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
+.upload-progress-bar{height:100%;background:var(--accent);transition:width .3s ease;width:0%}
+
+/* Cloudinary badge */
+.cloud-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(52,211,153,0.12);color:#34d399;margin-top:6px}
+.cloud-badge-warn{background:rgba(251,146,60,0.12);color:#fb923c}
+
+.stages-row{display:flex;gap:8px;flex-wrap:wrap}
+.stage-option{padding:7px 16px;border-radius:20px;border:0.5px solid var(--border2);background:none;color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s}
+.stage-option.sel-sketsa{background:var(--sketsa-bg);border-color:var(--sketsa);color:var(--sketsa)}
+.stage-option.sel-base{background:var(--base-bg);border-color:var(--base);color:var(--base)}
+.stage-option.sel-finishing{background:var(--finishing-bg);border-color:var(--finishing);color:var(--finishing)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-save{width:100%;padding:12px;background:var(--accent);border:none;border-radius:var(--radius);color:#fff;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px;transition:opacity .15s,transform .1s;font-family:inherit}
+.btn-save:hover{opacity:.88}
+.btn-save:active{transform:scale(.98)}
+.btn-save:disabled{opacity:.45;cursor:not-allowed}
+.btn-outline{padding:9px 16px;background:none;border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-outline:hover{background:var(--surface2);color:var(--text)}
+
+/* ── DETAIL MODAL ── */
+#detail-modal .modal{max-width:680px;max-height:90vh;overflow-y:auto;padding:0}
+.detail-header{padding:24px 24px 0}
+.detail-title-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;padding-right:40px}
+.detail-title{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.detail-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.detail-tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin:0 24px 16px}
+.detail-tab{padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.detail-tab:hover{color:var(--text2)}
+.detail-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.detail-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--surface2);font-size:10px;margin-left:6px;color:var(--text2)}
+.detail-tab.active .detail-tab-badge{background:var(--accent-dim);color:var(--accent)}
+.detail-imgs{padding:0 24px;margin-bottom:4px}
+.img-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.img-item{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--surface2);aspect-ratio:1;cursor:pointer}
+.img-item img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.img-item:hover img{transform:scale(1.04)}
+.img-item-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.img-item:hover .img-item-actions{opacity:1}
+.img-action-btn{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(0,0,0,.55);color:#fff}
+.img-action-btn:hover{background:rgba(0,0,0,.8)}
+.img-add-btn{aspect-ratio:1;border:1.5px dashed var(--border2);border-radius:var(--radius);background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--text3);font-size:12px;transition:all .15s}
+.img-add-btn:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--text2)}
+.img-uploading{aspect-ratio:1;border-radius:var(--radius);background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text3);font-size:12px}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.detail-body{padding:0 24px 8px}
+.detail-field{margin-bottom:12px}
+.detail-field label{font-size:12px;color:var(--text3);display:block;margin-bottom:5px}
+.detail-actions{display:flex;gap:8px;padding:16px 24px;border-top:0.5px solid var(--border)}
+.btn-danger{padding:9px 16px;background:none;border:0.5px solid var(--danger-bg);border-radius:var(--radius);color:var(--danger);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-danger:hover{background:var(--danger-bg)}
+
+/* ── COMMENTS ── */
+.comments-section{padding:0 24px 16px}
+.comment-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:260px;overflow-y:auto;padding-right:4px}
+.comment-list::-webkit-scrollbar{width:4px}
+.comment-list::-webkit-scrollbar-track{background:transparent}
+.comment-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.comment-item{background:var(--surface2);border-radius:var(--radius);padding:10px 12px;border:0.5px solid var(--border)}
+.comment-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.comment-avatar{width:24px;height:24px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0}
+.comment-author{font-size:12px;font-weight:600;color:var(--text);flex:1}
+.comment-time{font-size:11px;color:var(--text3)}
+.comment-text{font-size:13px;color:var(--text2);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.comment-item-actions{display:flex;gap:6px;margin-top:8px;padding-top:6px;border-top:0.5px solid var(--border);opacity:0;transition:opacity .15s}
+.comment-item:hover .comment-item-actions{opacity:1}
+.comment-action-btn{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:2px 6px;border-radius:4px;font-family:inherit;transition:all .15s}
+.comment-action-btn:hover{color:var(--text2);background:var(--border)}
+.comment-action-btn.del:hover{color:var(--danger)}
+.comment-input-area{display:flex;gap:8px;align-items:flex-end}
+.comment-input-wrap{flex:1}
+.comment-textarea{width:100%;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;padding:10px 12px;outline:none;transition:border-color .15s;font-family:inherit;resize:none;line-height:1.5;min-height:40px;max-height:120px;overflow-y:auto}
+.comment-textarea:focus{border-color:var(--accent)}
+.comment-textarea::placeholder{color:var(--text3)}
+.comment-send-btn{width:36px;height:36px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,transform .1s;align-self:flex-end}
+.comment-send-btn:hover{opacity:.85}
+.comment-send-btn:active{transform:scale(.95)}
+.comment-send-btn:disabled{opacity:.35;cursor:not-allowed}
+.no-comments{text-align:center;padding:24px;color:var(--text3);font-size:13px}
+.comment-name-input{width:100%;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;padding:8px 12px;outline:none;font-family:inherit;margin-bottom:8px}
+.comment-name-input:focus{border-color:var(--accent)}
+.comment-name-input::placeholder{color:var(--text3)}
+
+/* Image mention picker */
+.img-mention-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);border:0.5px solid var(--border)}
+.img-mention-label{font-size:11px;color:var(--text3);flex-shrink:0;white-space:nowrap}
+.img-mention-thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.img-mention-btn{width:38px;height:38px;border-radius:7px;overflow:hidden;border:1.5px solid var(--border2);cursor:pointer;position:relative;flex-shrink:0;background:var(--surface);transition:border-color .15s,transform .1s;padding:0}
+.img-mention-btn:hover{border-color:var(--accent);transform:scale(1.08)}
+.img-mention-btn img{width:100%;height:100%;object-fit:cover;display:block}
+.img-mention-btn .img-num{position:absolute;bottom:1px;right:2px;font-size:9px;font-weight:700;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9)}
+.img-mention-empty{font-size:12px;color:var(--text3);font-style:italic}
+/* Mention chip rendered in comment */
+.mention-chip{display:inline-flex;align-items:center;gap:5px;background:var(--accent-dim);border:0.5px solid rgba(159,140,246,0.3);border-radius:6px;padding:2px 7px 2px 3px;cursor:pointer;vertical-align:middle;margin:1px 2px;transition:background .15s}
+.mention-chip:hover{background:rgba(159,140,246,0.28)}
+.mention-chip img{width:20px;height:20px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.mention-chip span{font-size:12px;color:var(--accent);font-weight:500}
+
+/* ── LIGHTBOX ── */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:80vh;border-radius:var(--radius-lg);object-fit:contain}
+.lb-close{position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:50%;border:none;background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lb-actions{display:flex;gap:10px}
+.lb-btn{padding:8px 18px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+.lb-btn:hover{background:var(--surface2);color:var(--text)}
+
+/* ── ADD MODAL ── */
+#add-modal .modal{max-width:500px;padding:28px}
+
+/* ── SETTINGS MODAL ── */
+#settings-modal .modal{max-width:480px;padding:28px}
+.settings-section{margin-bottom:20px}
+.settings-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
+.settings-status{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface2);border-radius:var(--radius);margin-bottom:16px;border:0.5px solid var(--border)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:#34d399}
+.status-dot.warn{background:#fb923c}
+.status-text{font-size:13px;color:var(--text2);flex:1}
+.hint-text{font-size:12px;color:var(--text3);margin-top:6px;line-height:1.6}
+.hint-text a{color:var(--accent);text-decoration:none}
+.hint-text a:hover{text-decoration:underline}
+.inline-code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:11px;color:var(--accent)}
+
+@media(max-width:600px){
+  .header,.main{padding:20px 16px 0}
+  .main{padding-top:20px}
+  .setup-banner{padding:12px 16px}
+  .form-row{grid-template-columns:1fr}
+  #detail-modal .modal{max-height:100vh;border-radius:0}
+  .stats{gap:16px;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- Setup Banner -->
+<div class="setup-banner" id="setup-banner">
+  <div class="setup-banner-icon">☁️</div>
+  <div class="setup-banner-text">
+    <div class="setup-banner-title">Cloudinary belum dikonfigurasi</div>
+    <div class="setup-banner-sub">Atur Cloud Name & Upload Preset untuk bisa upload gambar ke cloud (support file besar)</div>
+  </div>
+  <button class="btn-setup" onclick="openSettings()">⚙️ Atur sekarang</button>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">🎨</div>
+      <div>
+        <div class="logo-text">Commission Tracker</div>
+        <div class="logo-sub" id="logo-sub">Lacak progres komisi kamu</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-settings" onclick="openSettings()" title="Pengaturan Cloudinary">⚙️</button>
+      <button class="btn-add" onclick="openAddModal()">
+        <span style="font-size:18px;line-height:1">+</span> Tambah komisi
+      </button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat-item active" onclick="setView('ongoing')">
+      <div class="stat-num" id="s-ongoing">0</div>
+      <div class="stat-label">Ongoing</div>
+    </div>
+    <div class="stat-item" onclick="setView('archive')">
+      <div class="stat-num" id="s-done">0</div>
+      <div class="stat-label">Selesai</div>
+    </div>
+    <div class="stat-item" onclick="setView('all')">
+      <div class="stat-num" id="s-all">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="view-ongoing">
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('all',this)">Semua</button>
+      <button class="filter-btn" onclick="setFilter('sketsa',this)">✏️ Sketsa</button>
+      <button class="filter-btn" onclick="setFilter('base',this)">🎨 Base color</button>
+      <button class="filter-btn" onclick="setFilter('finishing',this)">✨ Finishing</button>
+    </div>
+    <div class="cards-grid" id="ongoing-cards"></div>
+  </div>
+  <div id="view-archive" style="display:none">
+    <div class="section-label">Komisi selesai</div>
+    <div class="cards-grid" id="archive-cards"></div>
+  </div>
+  <div id="view-all" style="display:none">
+    <div class="section-label">Semua komisi</div>
+    <div class="cards-grid" id="all-cards"></div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSettings()">×</button>
+    <div style="font-size:18px;font-weight:600;margin-bottom:6px">⚙️ Pengaturan Cloudinary</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:22px">Gambar akan disimpan di Cloudinary — support file besar, tidak terbatas localStorage.</div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Status koneksi</div>
+      <div class="settings-status" id="settings-status">
+        <div class="status-dot warn" id="status-dot"></div>
+        <div class="status-text" id="status-text">Belum dikonfigurasi</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Konfigurasi</div>
+      <div class="form-group">
+        <label class="form-label">Cloud Name <span>— dari dashboard Cloudinary kamu</span></label>
+        <input class="form-input" id="s-cloud-name" placeholder="contoh: dxxxx1234" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Upload Preset <span>— harus mode Unsigned</span></label>
+        <input class="form-input" id="s-upload-preset" placeholder="contoh: commission_unsigned" autocomplete="off">
+        <div class="hint-text">
+          Cara buat: Dashboard Cloudinary → <strong>Settings</strong> → <strong>Upload</strong> → <strong>Add upload preset</strong> → set Signing Mode ke <span class="inline-code">Unsigned</span> → Save.
+        </div>
+      </div>
+      <button class="btn-save" style="margin-top:4px" onclick="saveSettings()">Simpan & test koneksi</button>
+    </div>
+
+    <div class="settings-section" style="margin-bottom:0">
+      <div class="settings-section-title">Info</div>
+      <div class="hint-text">
+        Free tier Cloudinary memberi <strong>25 credits/bulan</strong> (1 credit = 1 GB storage atau 1 GB bandwidth). Gambar komisi biasa (JPG/PNG) biasanya 1–5 MB — lebih dari cukup untuk pemakaian pribadi.<br><br>
+        Format didukung: JPG, PNG, WEBP, GIF, BMP, TIFF, PSD, SVG, PDF, dan lainnya.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddModal()">×</button>
+    <div style="font-size:18px;font-weight:600;margin-bottom:22px">Komisi baru</div>
+    <div class="form-group">
+      <label class="form-label">Gambar referensi</label>
+      <div id="add-imgs-grid" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <div class="upload-zone" id="add-upload-zone" onclick="triggerAddUpload()">
+        <div style="font-size:22px">📎</div>
+        <div>Klik untuk upload gambar</div>
+        <div style="font-size:11px;color:var(--text3)">Bisa pilih banyak gambar sekaligus • JPG, PNG, WEBP, GIF, PSD</div>
+        <div class="upload-progress"><div class="upload-progress-bar" id="add-progress-bar"></div></div>
+      </div>
+      <input type="file" id="add-img-input" accept="image/*,.psd,.ai,.tiff,.tif" style="display:none" multiple onchange="handleAddImg(this)">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nama komisi *</label>
+        <input class="form-input" id="inp-title" placeholder="cth: Fullbody OC Risa" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Klien</label>
+        <input class="form-input" id="inp-client" placeholder="cth: @username" autocomplete="off">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan</label>
+      <input class="form-input" id="inp-note" placeholder="cth: warna pink, ekspresi happy, bg polos" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tahap saat ini</label>
+      <div class="stages-row" id="add-stages-row">
+        <button class="stage-option sel-sketsa" onclick="pickStage('sketsa',this,'add-stages-row')">✏️ Sketsa</button>
+        <button class="stage-option" onclick="pickStage('base',this,'add-stages-row')">🎨 Base color</button>
+        <button class="stage-option" onclick="pickStage('finishing',this,'add-stages-row')">✨ Finishing</button>
+      </div>
+    </div>
+    <button class="btn-save" id="btn-save-commission" onclick="saveCommission()">Simpan komisi</button>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-bg" id="detail-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDetail()">×</button>
+    <div class="detail-header">
+      <div class="detail-title-row">
+        <div>
+          <div class="detail-title" id="d-title">—</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:3px" id="d-client">—</div>
+        </div>
+      </div>
+      <div class="detail-meta" id="d-meta"></div>
+    </div>
+
+    <div class="detail-tabs">
+      <button class="detail-tab active" onclick="switchDetailTab('imgs',this)" id="tab-imgs">Gambar <span class="detail-tab-badge" id="tab-imgs-count">0</span></button>
+      <button class="detail-tab" onclick="switchDetailTab('edit',this)" id="tab-edit">Edit detail</button>
+      <button class="detail-tab" onclick="switchDetailTab('comments',this)" id="tab-comments">Komentar <span class="detail-tab-badge" id="tab-comments-count">0</span></button>
+    </div>
+
+    <!-- Tab: Gambar -->
+    <div id="dtab-imgs">
+      <div class="detail-imgs">
+        <div class="img-gallery" id="d-gallery"></div>
+        <input type="file" id="d-img-input" accept="image/*,.psd,.tiff,.tif" style="display:none" multiple onchange="addImgsToDetail(this)">
+      </div>
+    </div>
+
+    <!-- Tab: Edit -->
+    <div id="dtab-edit" style="display:none">
+      <div class="detail-body">
+        <div class="form-row">
+          <div class="detail-field">
+            <label>Nama komisi</label>
+            <input class="form-input" id="d-inp-title" autocomplete="off">
+          </div>
+          <div class="detail-field">
+            <label>Klien</label>
+            <input class="form-input" id="d-inp-client" autocomplete="off">
+          </div>
+        </div>
+        <div class="detail-field">
+          <label>Catatan</label>
+          <textarea class="form-input" id="d-inp-note" rows="3"></textarea>
+        </div>
+        <div class="detail-field" id="d-stage-field">
+          <label>Tahap</label>
+          <div class="stages-row" id="d-stages-row" style="margin-top:6px">
+            <button class="stage-option" onclick="pickStage('sketsa',this,'d-stages-row')">✏️ Sketsa</button>
+            <button class="stage-option" onclick="pickStage('base',this,'d-stages-row')">🎨 Base color</button>
+            <button class="stage-option" onclick="pickStage('finishing',this,'d-stages-row')">✨ Finishing</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Komentar -->
+    <div id="dtab-comments" style="display:none">
+      <div class="comments-section">
+        <div class="comment-list" id="comment-list"></div>
+        <div style="margin-bottom:8px">
+          <input class="comment-name-input" id="comment-author-input" placeholder="Nama kamu (opsional)" autocomplete="off" maxlength="40">
+        </div>
+        <!-- Image mention picker -->
+        <div class="img-mention-bar" id="img-mention-bar">
+          <span class="img-mention-label">📎 Sebut gambar:</span>
+          <div class="img-mention-thumbs" id="img-mention-thumbs"></div>
+        </div>
+        <div class="comment-input-area">
+          <div class="comment-input-wrap">
+            <textarea class="comment-textarea" id="comment-textarea" placeholder="Tulis komentar... klik thumbnail di atas untuk menyebut gambar tertentu" rows="2" onkeydown="commentKeydown(event)" oninput="autoResizeTextarea(this)"></textarea>
+          </div>
+          <button class="comment-send-btn" onclick="sendComment()">➤</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">Ctrl+Enter untuk kirim</div>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <button class="btn-save" style="margin-top:0;flex:1" id="d-save-btn" onclick="saveDetail()">Simpan perubahan</button>
+      <button class="btn-outline" id="d-toggle-done" onclick="toggleDetailDone()"></button>
+      <button class="btn-danger" onclick="deleteFromDetail()">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()">×</button>
+  <img id="lb-img" src="" alt="">
+  <div class="lb-actions">
+    <button class="lb-btn" onclick="window.open(lbSrc,'_blank')">🔗 Buka di tab baru</button>
+    <button class="lb-btn" onclick="closeLightbox()">Tutup</button>
+  </div>
+</div>
+
+<script type="module">
+// ─── FIREBASE SETUP ──────────────────────────────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDCvIIxzFZDYQi44-xbpUf_xjh25T2RD-I",
+  authDomain: "mycommissions-77eec.firebaseapp.com",
+  projectId: "mycommissions-77eec",
+  storageBucket: "mycommissions-77eec.firebasestorage.app",
+  messagingSenderId: "798062663997",
+  appId: "1:798062663997:web:558ea20b24fb4c1ecc0d54",
+  measurementId: "G-GE9QJN3LYS"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const COL = 'commissions';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let commissions = [];
+let cloudConfig  = JSON.parse(localStorage.getItem('cloudinaryConfig') || '{}');
+let currentView  = 'ongoing', currentFilter = 'all', currentStage = 'sketsa';
+let detailId = null, detailStage = 'sketsa', lbSrc = '', activeDetailTab = 'imgs';
+let addImgUrls = []; // array of uploaded URLs
+let isUploading = false;
+let _unsubscribe = null;
+
+// ─── FIREBASE SYNC ───────────────────────────────────────────────────────────
+function startSync() {
+  if (_unsubscribe) _unsubscribe();
+  _unsubscribe = onSnapshot(collection(db, COL), snap => {
+    commissions = snap.docs.map(d => d.data()).sort((a,b) => b.id - a.id);
+    renderView();
+    updateBanner();
+  });
+}
+
+async function save(c) {
+  // c = single commission object to save/update
+  await setDoc(doc(db, COL, String(c.id)), c);
+}
+
+async function saveAll() {
+  // Save all (used for migration only)
+  for (const c of commissions) {
+    await setDoc(doc(db, COL, String(c.id)), c);
+  }
+}
+
+async function deleteCommission(id) {
+  await deleteDoc(doc(db, COL, String(id)));
+}
+
+function saveConfig() { localStorage.setItem('cloudinaryConfig', JSON.stringify(cloudConfig)); }
+function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function stageLabel(s){ return {sketsa:'Sketsa',base:'Base color',finishing:'Finishing',done:'Selesai'}[s]||s; }
+function stageEmoji(s){ return {sketsa:'✏️',base:'🎨',finishing:'✨',done:'✅'}[s]||''; }
+function isCloudinaryReady(){ return !!(cloudConfig.cloudName && cloudConfig.uploadPreset); }
+
+function timeAgo(ts){
+  const d=Date.now()-ts, m=Math.floor(d/60000), h=Math.floor(d/3600000), dy=Math.floor(d/86400000);
+  if(d<60000) return 'baru saja';
+  if(m<60) return m+'m lalu';
+  if(h<24) return h+'j lalu';
+  if(dy<7) return dy+'h lalu';
+  return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+}
+
+// ─── CLOUDINARY UPLOAD ───────────────────────────────────────────────────────
+async function uploadToCloudinary(file, onProgress) {
+  if (!isCloudinaryReady()) {
+    // Fallback: base64 jika Cloudinary belum dikonfigurasi
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = e => resolve({ url: e.target.result, isLocal: true });
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', cloudConfig.uploadPreset);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudConfig.cloudName}/image/upload`);
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const res = JSON.parse(xhr.responseText);
+        resolve({ url: res.secure_url, publicId: res.public_id, isLocal: false });
+      } else {
+        let msg = 'Upload gagal';
+        try { msg = JSON.parse(xhr.responseText).error?.message || msg; } catch(e){}
+        reject(new Error(msg));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Koneksi gagal'));
+    xhr.send(formData);
+  });
+}
+
+// ─── SETUP BANNER ────────────────────────────────────────────────────────────
+function updateBanner() {
+  const banner = document.getElementById('setup-banner');
+  banner.classList.toggle('hidden', isCloudinaryReady());
+  const sub = document.getElementById('logo-sub');
+  if (isCloudinaryReady()) {
+    sub.innerHTML = `☁️ <span style="color:#34d399;font-size:11px">${cloudConfig.cloudName}</span>`;
+  } else {
+    sub.textContent = 'Lacak progres komisi kamu';
+  }
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('s-cloud-name').value    = cloudConfig.cloudName    || '';
+  document.getElementById('s-upload-preset').value = cloudConfig.uploadPreset || '';
+  updateSettingsStatus();
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+
+function updateSettingsStatus() {
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  if (isCloudinaryReady()) {
+    dot.className  = 'status-dot ok';
+    text.textContent = `Terhubung ke cloud: ${cloudConfig.cloudName}`;
+  } else {
+    dot.className  = 'status-dot warn';
+    text.textContent = 'Belum dikonfigurasi — gambar disimpan lokal (maks ~5 MB)';
+  }
+}
+
+async function saveSettings() {
+  const cloudName    = document.getElementById('s-cloud-name').value.trim();
+  const uploadPreset = document.getElementById('s-upload-preset').value.trim();
+  if (!cloudName || !uploadPreset) { alert('Isi Cloud Name dan Upload Preset dulu ya!'); return; }
+
+  const btn = document.querySelector('#settings-modal .btn-save');
+  btn.textContent = 'Mencoba koneksi...'; btn.disabled = true;
+
+  try {
+    // Buat blob 1x1 GIF langsung tanpa fetch(data:...) — lebih kompatibel di file lokal
+    const gifB64 = 'R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    const raw = atob(gifB64);
+    const arr = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    const testBlob = new Blob([arr], { type: 'image/gif' });
+
+    const fd = new FormData();
+    fd.append('file', testBlob, 'test.gif');
+    fd.append('upload_preset', uploadPreset);
+
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (data.secure_url) {
+      cloudConfig = { cloudName, uploadPreset };
+      saveConfig();
+      updateSettingsStatus();
+      updateBanner();
+      btn.textContent = '✅ Berhasil tersimpan!'; btn.disabled = false;
+      setTimeout(closeSettings, 1200);
+    } else {
+      throw new Error(data.error?.message || 'Upload preset tidak valid');
+    }
+  } catch(e) {
+    btn.textContent = 'Simpan & test koneksi'; btn.disabled = false;
+    alert('❌ Gagal: ' + e.message + '\n\nPastikan:\n1. Cloud Name sudah benar\n2. Upload Preset mode Unsigned\n3. Koneksi internet aktif');
+  }
+}
+
+// ─── STATS & RENDER ──────────────────────────────────────────────────────────
+function updateStats() {
+  const on = commissions.filter(c=>!c.done), dn = commissions.filter(c=>c.done);
+  document.getElementById('s-ongoing').textContent = on.length;
+  document.getElementById('s-done').textContent    = dn.length;
+  document.getElementById('s-all').textContent     = commissions.length;
+}
+
+function cardHTML(c) {
+  const stage = c.done ? 'done' : c.stage;
+  const imgs  = c.imgs || [];
+  const thumb = imgs[0] || null;
+  const commentCount = (c.comments||[]).length;
+  const cloudIcon = imgs.some(u => u.startsWith('http')) ? '<span style="font-size:10px;color:#34d399" title="Tersimpan di Cloudinary">☁️</span>' : '';
+  return `<div class="card" id="card-${c.id}" onclick="openDetail(${c.id})">
+    <div class="card-thumb">${thumb ? `<img src="${thumb}" loading="lazy">` : '<div class="no-img">🖼️</div>'}</div>
+    <div class="card-stage-bar"><div class="fill fill-${stage}"></div></div>
+    <div class="card-body">
+      <div class="card-title" title="${esc(c.title)}">${esc(c.title)}</div>
+      <div class="card-client">${c.client ? esc(c.client) : '<span style="opacity:.4">—</span>'}</div>
+      <span class="badge badge-${stage}">${stageEmoji(stage)} ${stageLabel(stage)}</span>
+      ${cloudIcon}
+      ${imgs.length > 1 ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">📷 ${imgs.length}</span>` : ''}
+      ${commentCount > 0 ? `<span style="font-size:11px;color:var(--text3);margin-left:4px">💬 ${commentCount}</span>` : ''}
+      ${c.note ? `<div class="card-note">${esc(c.note)}</div>` : ''}
+    </div>
+    <div class="card-footer">
+      <span class="card-date">${c.created}</span>
+      <span style="font-size:11px;color:var(--text3)">Klik untuk detail</span>
+    </div>
+  </div>`;
+}
+
+function renderView() {
+  updateStats();
+  const renders = [
+    { id:'ongoing-cards', list:commissions.filter(c=>!c.done&&(currentFilter==='all'||c.stage===currentFilter)), show:currentView==='ongoing', emptyIcon:'🎨', emptyTitle:'Belum ada komisi aktif', emptySub:'Klik "+ Tambah komisi" untuk mulai' },
+    { id:'archive-cards', list:commissions.filter(c=>c.done), show:currentView==='archive', emptyIcon:'📦', emptyTitle:'Belum ada komisi selesai', emptySub:'Tandai komisi selesai untuk memindahkannya ke sini' },
+    { id:'all-cards',     list:commissions, show:currentView==='all', emptyIcon:'🎨', emptyTitle:'Belum ada komisi', emptySub:'' }
+  ];
+  renders.forEach(r => {
+    if (!r.show) return;
+    const el = document.getElementById(r.id);
+    el.innerHTML = r.list.length ? r.list.map(cardHTML).join('') :
+      `<div class="empty-state"><div class="empty-icon">${r.emptyIcon}</div><div class="empty-title">${r.emptyTitle}</div><div class="empty-sub">${r.emptySub}</div></div>`;
+  });
+}
+
+function setView(v) {
+  currentView = v;
+  ['ongoing','archive','all'].forEach(x => { document.getElementById('view-'+x).style.display = x===v ? 'block' : 'none'; });
+  document.querySelectorAll('.stat-item').forEach((el,i) => { el.classList.toggle('active', ['ongoing','archive','all'][i]===v); });
+  renderView();
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderView();
+}
+
+function pickStage(val, btn, rowId) {
+  document.querySelectorAll('#'+rowId+' .stage-option').forEach(b => b.className = 'stage-option');
+  btn.className = 'stage-option sel-'+val;
+  if (rowId==='add-stages-row') currentStage = val;
+  else if (rowId==='d-stages-row') detailStage = val;
+}
+
+// ─── ADD MODAL ────────────────────────────────────────────────────────────────
+function triggerAddUpload() {
+  if (isUploading) return;
+  document.getElementById('add-img-input').click();
+}
+
+function openAddModal() {
+  addImgUrls = []; currentStage = 'sketsa'; isUploading = false;
+  document.getElementById('inp-title').value = '';
+  document.getElementById('inp-client').value = '';
+  document.getElementById('inp-note').value = '';
+  const zone = document.getElementById('add-upload-zone');
+  const grid = document.getElementById('add-imgs-grid');
+  zone.innerHTML = `<div style="font-size:22px">📎</div><div>Klik untuk upload gambar</div><div style="font-size:11px;color:var(--text3)">Bisa pilih banyak gambar sekaligus • JPG, PNG, WEBP, GIF, PSD</div><div class="upload-progress"><div class="upload-progress-bar" id="add-progress-bar"></div></div>`;
+  zone.style.padding = ''; zone.style.minHeight = '';
+  zone.classList.remove('has-img','uploading');
+  grid.style.display = 'none'; grid.innerHTML = '';
+  document.querySelectorAll('#add-stages-row .stage-option').forEach((b,i) => { b.className='stage-option'+(i===0?' sel-sketsa':''); });
+  document.getElementById('btn-save-commission').disabled = false;
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('inp-title').focus(), 100);
+}
+function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+async function handleAddImg(input) {
+  if (!input.files.length) return;
+  const files = Array.from(input.files);
+  const zone = document.getElementById('add-upload-zone');
+  const grid = document.getElementById('add-imgs-grid');
+  const saveBtn = document.getElementById('btn-save-commission');
+
+  isUploading = true;
+  saveBtn.disabled = true;
+  zone.innerHTML = `<div class="spinner"></div><div style="font-size:12px;margin-top:4px">Mengupload ${files.length} gambar…</div><div style="font-size:11px;color:var(--text3)" id="add-upload-pct">0 / ${files.length}</div>`;
+
+  let done = 0;
+  const results = await Promise.all(files.map(async file => {
+    try {
+      const result = await uploadToCloudinary(file, null);
+      done++;
+      const pct = document.getElementById('add-upload-pct');
+      if (pct) pct.textContent = `${done} / ${files.length} selesai`;
+      return result.url;
+    } catch(e) { return null; }
+  }));
+
+  const newUrls = results.filter(Boolean);
+  addImgUrls = [...addImgUrls, ...newUrls];
+
+  // Render grid
+  renderAddImgGrid();
+
+  // Reset upload zone to small + button
+  zone.innerHTML = `<div style="font-size:22px">➕</div><div style="font-size:12px">Tambah gambar lagi</div>`;
+  zone.style.padding = '12px';
+  zone.style.minHeight = 'unset';
+
+  isUploading = false;
+  saveBtn.disabled = false;
+  input.value = '';
+}
+
+function renderAddImgGrid() {
+  const grid = document.getElementById('add-imgs-grid');
+  if (!addImgUrls.length) { grid.style.display = 'none'; return; }
+  grid.style.display = 'flex';
+  grid.innerHTML = addImgUrls.map((url, i) => `
+    <div style="position:relative;width:72px;height:72px;flex-shrink:0">
+      <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--border)">
+      <button onclick="removeAddImg(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+    </div>
+  `).join('');
+}
+
+function removeAddImg(idx) {
+  addImgUrls.splice(idx, 1);
+  renderAddImgGrid();
+  if (!addImgUrls.length) {
+    const zone = document.getElementById('add-upload-zone');
+    zone.innerHTML = `<div style="font-size:22px">📎</div><div>Klik untuk upload gambar</div><div style="font-size:11px;color:var(--text3)">Bisa pilih banyak gambar sekaligus • JPG, PNG, WEBP, GIF, PSD</div>`;
+    zone.style.padding = '';
+    zone.style.minHeight = '';
+  }
+}
+
+async function saveCommission() {
+  const title = document.getElementById('inp-title').value.trim();
+  if (!title) { document.getElementById('inp-title').focus(); return; }
+  if (isUploading) return;
+  const imgs = [...addImgUrls];
+  const newC = {
+    id: Date.now(), title,
+    client: document.getElementById('inp-client').value.trim(),
+    note:   document.getElementById('inp-note').value.trim(),
+    stage: currentStage, imgs, img: imgs[0]||null,
+    done: false, comments: [],
+    created: new Date().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})
+  };
+  await save(newC);
+  closeAddModal(); setView('ongoing');
+}
+
+// ─── DETAIL ──────────────────────────────────────────────────────────────────
+function switchDetailTab(tab, btn) {
+  activeDetailTab = tab;
+  ['imgs','edit','comments'].forEach(t => { document.getElementById('dtab-'+t).style.display = t===tab ? 'block' : 'none'; });
+  document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('d-save-btn').style.display = tab==='edit' ? 'block' : 'none';
+  if (tab==='comments') setTimeout(() => document.getElementById('comment-textarea').focus(), 100);
+}
+
+function openDetail(id) {
+  const c = commissions.find(x => x.id===id);
+  if (!c) return;
+  detailId = id;
+  if (!c.comments) c.comments = [];
+  detailStage = c.done ? 'done' : c.stage;
+
+  document.getElementById('d-title').textContent  = c.title;
+  document.getElementById('d-client').textContent = c.client || 'Tidak ada klien';
+  document.getElementById('d-inp-title').value  = c.title;
+  document.getElementById('d-inp-client').value = c.client || '';
+  document.getElementById('d-inp-note').value   = c.note   || '';
+
+  const stage = c.done ? 'done' : c.stage;
+  document.getElementById('d-meta').innerHTML = `<span class="badge badge-${stage}">${stageEmoji(stage)} ${stageLabel(stage)}</span><span style="font-size:12px;color:var(--text3)">${c.created}</span>`;
+  document.getElementById('d-stage-field').style.display = c.done ? 'none' : 'block';
+  document.querySelectorAll('#d-stages-row .stage-option').forEach(b => {
+    const map = {'✏️ Sketsa':'sketsa','🎨 Base color':'base','✨ Finishing':'finishing'};
+    const v = map[b.textContent.trim()];
+    b.className = 'stage-option' + (v===c.stage && !c.done ? ' sel-'+v : '');
+  });
+
+  renderDetailGallery(c);
+  renderComments(c);
+  updateDetailTabCounts(c);
+
+  const tb = document.getElementById('d-toggle-done');
+  tb.textContent = c.done ? '↩ Buka lagi' : '✓ Tandai selesai';
+  tb.style.color = c.done ? 'var(--text2)' : 'var(--finishing)';
+
+  switchDetailTab('imgs', document.getElementById('tab-imgs'));
+  document.querySelectorAll('.detail-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function updateDetailTabCounts(c) {
+  document.getElementById('tab-imgs-count').textContent     = (c.imgs||[]).length;
+  document.getElementById('tab-comments-count').textContent = (c.comments||[]).length;
+}
+
+function renderDetailGallery(c) {
+  const imgs = c.imgs || [];
+  document.getElementById('d-gallery').innerHTML =
+    imgs.map((src,i) => {
+      const isCloud = src.startsWith('http');
+      return `<div class="img-item">
+        <img src="${src}" loading="lazy" onclick="openLightbox('${src}')">
+        <div class="img-item-actions">
+          ${isCloud ? `<button class="img-action-btn" title="Buka asli" onclick="event.stopPropagation();window.open('${src}','_blank')">🔗</button>` : `<button class="img-action-btn" title="Download" onclick="event.stopPropagation();dlImg('${src}','gambar-${i+1}.jpg')">⬇</button>`}
+          <button class="img-action-btn" title="Hapus" onclick="event.stopPropagation();removeImg(${i})" style="background:rgba(220,50,50,.6)">✕</button>
+        </div>
+      </div>`;
+    }).join('') +
+    `<button class="img-add-btn" onclick="document.getElementById('d-img-input').click()">
+      <span style="font-size:22px">+</span><span>Tambah gambar</span>
+    </button>`;
+}
+
+async function addImgsToDetail(input) {
+  if (!input.files.length) return;
+  const c = commissions.find(x => x.id===detailId);
+  if (!c) return;
+  if (!c.imgs) c.imgs = c.img ? [c.img] : [];
+
+  // Tambah placeholder loading
+  const gallery = document.getElementById('d-gallery');
+  const placeholders = Array.from(input.files).map(() => {
+    const div = document.createElement('div');
+    div.className = 'img-uploading';
+    div.innerHTML = '<div class="spinner"></div><div>Upload…</div>';
+    gallery.insertBefore(div, gallery.lastElementChild);
+    return div;
+  });
+
+  const files = Array.from(input.files);
+  input.value = '';
+
+  await Promise.all(files.map(async (file, i) => {
+    try {
+      const result = await uploadToCloudinary(file, null);
+      c.imgs.push(result.url);
+      if (!c.img) c.img = result.url;
+    } catch(e) {
+      console.error('Upload failed:', e);
+    } finally {
+      placeholders[i].remove();
+    }
+  }));
+
+  await save(c); renderDetailGallery(c); updateDetailTabCounts(c); renderView();
+}
+
+function removeImg(idx) {
+  const c = commissions.find(x => x.id===detailId);
+  if (!c || !c.imgs) return;
+  c.imgs.splice(idx, 1);
+  c.img = c.imgs[0] || null;
+  save(c); renderDetailGallery(c); updateDetailTabCounts(c); renderView();
+}
+
+async function saveDetail() {
+  const c = commissions.find(x => x.id===detailId);
+  if (!c) return;
+  c.title  = document.getElementById('d-inp-title').value.trim() || c.title;
+  c.client = document.getElementById('d-inp-client').value.trim();
+  c.note   = document.getElementById('d-inp-note').value.trim();
+  if (!c.done) c.stage = detailStage;
+  await save(c); closeDetail();
+}
+
+async function toggleDetailDone() {
+  const c = commissions.find(x => x.id===detailId);
+  if (!c) return;
+  c.done = !c.done;
+  await save(c); closeDetail();
+}
+
+async function deleteFromDetail() {
+  if (!confirm('Hapus komisi ini?')) return;
+  await deleteCommission(detailId);
+  closeDetail();
+}
+
+function closeDetail() { document.getElementById('detail-modal').classList.remove('open'); detailId = null; }
+
+// ─── COMMENTS ────────────────────────────────────────────────────────────────
+function renderMentionBar(c) {
+  const imgs = c.imgs || [];
+  const bar  = document.getElementById('img-mention-bar');
+  const thumbs = document.getElementById('img-mention-thumbs');
+  if (!imgs.length) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  thumbs.innerHTML = imgs.map((src, i) =>
+    `<button class="img-mention-btn" onclick="insertMention(${i})" title="Sebut Gambar ${i+1}">
+      <img src="${src}" alt="Gambar ${i+1}">
+      <span class="img-num">${i+1}</span>
+    </button>`
+  ).join('');
+}
+
+function insertMention(idx) {
+  const ta = document.getElementById('comment-textarea');
+  const mention = `[Gambar ${idx+1}]`;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const before = ta.value.substring(0, start);
+  const after  = ta.value.substring(end);
+  // Add space before mention if needed
+  const prefix = before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n') ? ' ' : '';
+  ta.value = before + prefix + mention + ' ' + after;
+  const pos = start + prefix.length + mention.length + 1;
+  ta.setSelectionRange(pos, pos);
+  ta.focus();
+  autoResizeTextarea(ta);
+}
+
+function renderCommentText(text, imgs) {
+  // Parse [Gambar N] tokens and render as mention chips
+  return text.replace(/\[Gambar (\d+)\]/g, (match, num) => {
+    const idx = parseInt(num) - 1;
+    const src = (imgs || [])[idx];
+    if (!src) return `<span style="color:var(--accent);font-size:12px">${match}</span>`;
+    return `<span class="mention-chip" onclick="openLightbox('${src}')" title="Buka Gambar ${num}">
+      <img src="${src}" alt="Gambar ${num}">
+      <span>Gambar ${num}</span>
+    </span>`;
+  });
+}
+
+function renderComments(c) {
+  const list = c.comments || [];
+  const imgs  = c.imgs || [];
+  const el   = document.getElementById('comment-list');
+  if (!list.length) { el.innerHTML = '<div class="no-comments">💬 Belum ada komentar.<br>Tulis catatan progres atau feedback di bawah!</div>'; return; }
+  el.innerHTML = list.map((cm,i) => `
+    <div class="comment-item">
+      <div class="comment-header">
+        <div class="comment-avatar">${(cm.author||'?')[0].toUpperCase()}</div>
+        <span class="comment-author">${esc(cm.author||'Anonim')}</span>
+        <span class="comment-time">${timeAgo(cm.ts)}</span>
+      </div>
+      <div class="comment-text">${renderCommentText(esc(cm.text), imgs)}</div>
+      <div class="comment-item-actions">
+        <button class="comment-action-btn del" onclick="deleteComment(${i})">🗑 Hapus</button>
+      </div>
+    </div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendComment() {
+  const c = commissions.find(x => x.id===detailId);
+  if (!c) return;
+  const text = document.getElementById('comment-textarea').value.trim();
+  if (!text) return;
+  const author = document.getElementById('comment-author-input').value.trim() || 'Anonim';
+  if (!c.comments) c.comments = [];
+  c.comments.push({ author, text, ts: Date.now() });
+  await save(c);
+  document.getElementById('comment-textarea').value = '';
+  document.getElementById('comment-textarea').style.height = '';
+  renderComments(c); updateDetailTabCounts(c);
+}
+
+async function deleteComment(idx) {
+  const c = commissions.find(x => x.id===detailId);
+  if (!c || !c.comments) return;
+  c.comments.splice(idx, 1);
+  await save(c); renderComments(c); updateDetailTabCounts(c);
+}
+
+function commentKeydown(e) { if (e.key==='Enter' && (e.ctrlKey||e.metaKey)) { e.preventDefault(); sendComment(); } }
+function autoResizeTextarea(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+
+// ─── LIGHTBOX ────────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  lbSrc = src;
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function dlImg(src, name) { const a=document.createElement('a'); a.href=src; a.download=name||'gambar.jpg'; a.click(); }
+
+// ─── EVENTS ──────────────────────────────────────────────────────────────────
+document.getElementById('add-modal').addEventListener('click', function(e){ if(e.target===this) closeAddModal(); });
+document.getElementById('detail-modal').addEventListener('click', function(e){ if(e.target===this) closeDetail(); });
+document.getElementById('settings-modal').addEventListener('click', function(e){ if(e.target===this) closeSettings(); });
+document.getElementById('lightbox').addEventListener('click', function(e){ if(e.target===this) closeLightbox(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeAddModal(); closeDetail(); closeLightbox(); closeSettings(); } });
+
+// ─── SERVICE WORKER ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ─── EXPOSE TO WINDOW (required for type="module") ───────────────────────────
+Object.assign(window, {
+  openAddModal, closeAddModal, saveCommission, triggerAddUpload, handleAddImg, removeAddImg,
+  openDetail, closeDetail, saveDetail, deleteFromDetail, toggleDetailDone,
+  switchDetailTab, openSettings, closeSettings, saveSettings,
+  setView, setFilter, pickStage,
+  addImgsToDetail, removeImg,
+  renderMentionBar, insertMention,
+  sendComment, deleteComment, commentKeydown, autoResizeTextarea,
+  openLightbox, closeLightbox, dlImg
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+startSync();
+</script>
+</body>
+</html>
