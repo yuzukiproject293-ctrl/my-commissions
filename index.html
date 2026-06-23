@@ -1060,6 +1060,7 @@ function autoResizeTextarea(el) { el.style.height='auto'; el.style.height=Math.m
 // ─── LIGHTBOX ────────────────────────────────────────────────────────────────
 function openLightbox(src) {
   lbSrc = src;
+  window.lbSrc = src;
   document.getElementById('lb-img').src = src;
   document.getElementById('lightbox').classList.add('open');
 }
