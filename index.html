@@ -473,8 +473,8 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
   <button class="lb-close" onclick="closeLightbox()">×</button>
   <img id="lb-img" src="" alt="">
   <div class="lb-actions">
-    <button class="lb-btn" onclick="window.open(lbSrc,'_blank')">🔗 Buka di tab baru</button>
-    <button class="lb-btn" onclick="dlImg(lbSrc,'gambar.jpg')">⬇ Download</button>
+    <button class="lb-btn" onclick="window.open(document.getElementById('lb-img').src,'_blank')">🔗 Buka di tab baru</button>
+    <button class="lb-btn" onclick="dlImg(document.getElementById('lb-img').src,'gambar.jpg')">⬇ Download</button>
     <button class="lb-btn" onclick="closeLightbox()">Tutup</button>
   </div>
 </div>
