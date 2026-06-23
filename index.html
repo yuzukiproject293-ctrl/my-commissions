@@ -550,13 +550,7 @@ function timeAgo(ts){
 // ─── CLOUDINARY UPLOAD ───────────────────────────────────────────────────────
 async function uploadToCloudinary(file, onProgress) {
   if (!isCloudinaryReady()) {
-    // Fallback: base64 jika Cloudinary belum dikonfigurasi
-    return new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = e => resolve({ url: e.target.result, isLocal: true });
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
+    throw new Error('Cloudinary belum dikonfigurasi. Atur Cloud Name & Upload Preset dulu di ⚙️ Pengaturan agar gambar bisa disimpan.');
   }
 
   const formData = new FormData();
@@ -760,6 +754,14 @@ async function handleAddImg(input) {
 
   isUploading = true;
   saveBtn.disabled = true;
+
+  if (!isCloudinaryReady()) {
+    zone.innerHTML = `<div style="font-size:22px">⚙️</div><div style="color:var(--danger);font-size:13px">Cloudinary belum disetup!</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Klik ⚙️ di pojok kanan atas untuk mengatur Cloudinary dulu</div>`;
+    isUploading = false;
+    saveBtn.disabled = false;
+    return;
+  }
+
   zone.innerHTML = `<div class="spinner"></div><div style="font-size:12px;margin-top:4px">Mengupload ${files.length} gambar…</div><div style="font-size:11px;color:var(--text3)" id="add-upload-pct">0 / ${files.length}</div>`;
 
   let done = 0;
