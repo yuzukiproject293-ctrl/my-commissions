@@ -1360,24 +1360,26 @@ function renderFileList(c) {
     </div>`).join('');
 }
 
-// ─── 0x0.st UPLOAD (untuk tab File — support semua format, max 512MB) ─────────
+// ─── CLOUDINARY RAW UPLOAD (untuk tab File — support semua format) ────────────
 async function uploadTo0x0(file, onProgress) {
+  if (!isCloudinaryReady()) throw new Error('Cloudinary belum dikonfigurasi. Atur dulu di ⚙️ Pengaturan.');
   return new Promise((resolve, reject) => {
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('upload_preset', cloudConfig.uploadPreset);
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://0x0.st');
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudConfig.cloudName}/raw/upload`);
     xhr.upload.onprogress = e => {
       if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
     };
     xhr.onload = () => {
-      if (xhr.status === 200 && xhr.responseText.trim().startsWith('https://')) {
-        resolve({ url: xhr.responseText.trim() });
-      } else {
-        reject(new Error('Upload gagal: ' + xhr.responseText));
-      }
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (data.secure_url) resolve({ url: data.secure_url });
+        else reject(new Error(data.error?.message || 'Upload gagal'));
+      } catch(e) { reject(new Error('Response tidak valid')); }
     };
-    xhr.onerror = () => reject(new Error('Koneksi ke 0x0.st gagal'));
+    xhr.onerror = () => reject(new Error('Koneksi gagal'));
     xhr.send(fd);
   });
 }
