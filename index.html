@@ -226,12 +226,19 @@ textarea.form-input{resize:vertical;min-height:70px;line-height:1.5}
 .inline-code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:11px;color:var(--accent)}
 
 @media(max-width:600px){
-  .header,.main{padding:20px 16px 0}
-  .main{padding-top:20px}
+  .header,.main{padding:12px 12px 0}
+  .main{padding-top:12px}
   .setup-banner{padding:12px 16px}
   .form-row{grid-template-columns:1fr}
   #detail-modal .modal{max-height:100vh;border-radius:0}
   .stats{gap:16px;overflow-x:auto}
+  .cards-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .card-img{height:130px}
+  .card-body{padding:10px 10px 6px}
+  .card-title{font-size:13px}
+  .card-client{font-size:11px}
+  .card-footer{padding:6px 10px 10px}
+  .card-date{font-size:10px}
 }
 </style>
 </head>
@@ -511,6 +518,16 @@ let _unsubscribe = null;
 // ─── FIREBASE SYNC ───────────────────────────────────────────────────────────
 function startSync() {
   if (_unsubscribe) _unsubscribe();
+  // Load cloudinary config from Firebase if not set locally
+  if (!isCloudinaryReady()) {
+    getDoc(doc(db, 'settings', 'cloudinary')).then(snap => {
+      if (snap.exists()) {
+        cloudConfig = snap.data();
+        saveConfig();
+        updateBanner();
+      }
+    }).catch(() => {});
+  }
   _unsubscribe = onSnapshot(collection(db, COL), snap => {
     commissions = snap.docs.map(d => d.data()).sort((a,b) => b.id - a.id);
     renderView();
@@ -642,6 +659,10 @@ async function saveSettings() {
     if (data.secure_url) {
       cloudConfig = { cloudName, uploadPreset };
       saveConfig();
+      // Sync ke Firebase biar semua device otomatis dapat config
+      try {
+        await setDoc(doc(db, 'settings', 'cloudinary'), { cloudName, uploadPreset });
+      } catch(e) { console.error('Sync config failed:', e); }
       updateSettingsStatus();
       updateBanner();
       btn.textContent = '✅ Berhasil tersimpan!'; btn.disabled = false;
